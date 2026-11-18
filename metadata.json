@@ -1,0 +1,6 @@
+{
+  "name": "Axiom Calc",
+  "description": "Professional scientific calculator with equation solver, interactive function grapher, and engineering unit converter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

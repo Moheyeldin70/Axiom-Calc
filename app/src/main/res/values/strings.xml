@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Axiom Calc</string>
+    <string name="nav_calculator">Compute</string>
+    <string name="nav_solver">Solve</string>
+    <string name="nav_graph">Graph</string>
+    <string name="nav_converter">Units</string>
+    <string name="title_history">Calculation History</string>
+    <string name="title_constants">Scientific Constants</string>
+    <string name="title_settings">Calculator Settings</string>
+    <string name="empty_history_title">No calculations yet</string>
+    <string name="empty_history_subtitle">Evaluate an expression to build your engineering log.</string>
+    <string name="clear_all">Clear All</string>
+    <string name="solver_root_finder">Root Finder</string>
+    <string name="solver_polynomial">Polynomial</string>
+    <string name="solver_linear_system">Linear System</string>
+    <string name="solver_calculus">Calculus</string>
+    <string name="graph_add_function">Add Function</string>
+    <string name="graph_table_values">Table of Values</string>
+    <string name="converter_swap_units">Swap units</string>
+    <string name="converter_send_to_calc">Send to Compute</string>
+</resources>
