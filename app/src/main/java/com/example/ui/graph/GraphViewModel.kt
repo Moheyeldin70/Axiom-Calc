@@ -140,6 +140,43 @@ class GraphViewModel : ViewModel() {
         }
     }
 
+    fun transform(
+        panPxX: Float,
+        panPxY: Float,
+        centroidPxX: Float,
+        centroidPxY: Float,
+        zoom: Float,
+        widthPx: Int,
+        heightPx: Int
+    ) {
+        if (widthPx <= 0 || heightPx <= 0 || !zoom.isFinite() || zoom <= 0f) return
+        _uiState.update { s ->
+            val fracX = (centroidPxX.toDouble() / widthPx.toDouble()).coerceIn(0.0, 1.0)
+            val fracY = (centroidPxY.toDouble() / heightPx.toDouble()).coerceIn(0.0, 1.0)
+
+            val worldXAtCentroid = s.centerX + (fracX - 0.5) * s.spanX
+            val worldYAtCentroid = s.centerY + (0.5 - fracY) * s.spanY
+
+            val safeZoom = zoom.toDouble().coerceIn(0.5, 2.0)
+            val newSpanX = (s.spanX / safeZoom).coerceIn(0.05, 5000.0)
+            val newSpanY = (s.spanY / safeZoom).coerceIn(0.05, 5000.0)
+
+            val newCenterX = worldXAtCentroid - (fracX - 0.5) * newSpanX -
+                (panPxX.toDouble() / widthPx.toDouble()) * newSpanX
+            val newCenterY = worldYAtCentroid - (0.5 - fracY) * newSpanY +
+                (panPxY.toDouble() / heightPx.toDouble()) * newSpanY
+
+            computeKeyPoints(
+                s.copy(
+                    centerX = newCenterX,
+                    centerY = newCenterY,
+                    spanX = newSpanX,
+                    spanY = newSpanY
+                )
+            )
+        }
+    }
+
     fun zoom(factor: Double) {
         _uiState.update { s ->
             val newSpanX = (s.spanX * factor).coerceIn(0.05, 5000.0)

@@ -49,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -223,8 +224,7 @@ fun GraphScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 InteractiveGraphCanvas(
                     state = state,
-                    onPan = viewModel::pan,
-                    onZoom = viewModel::zoom,
+                    onTransform = viewModel::transform,
                     onTraceX = viewModel::setTraceX,
                     modifier = Modifier
                         .fillMaxSize()
@@ -366,8 +366,15 @@ fun GraphScreen(
 @Composable
 private fun InteractiveGraphCanvas(
     state: GraphUiState,
-    onPan: (Double, Double) -> Unit,
-    onZoom: (Double) -> Unit,
+    onTransform: (
+        panPxX: Float,
+        panPxY: Float,
+        centroidPxX: Float,
+        centroidPxY: Float,
+        zoom: Float,
+        widthPx: Int,
+        heightPx: Int
+    ) -> Unit,
     onTraceX: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -379,32 +386,39 @@ private fun InteractiveGraphCanvas(
     val labelColor = cs.onSurfaceVariant
     val crosshairColor = cs.secondary
 
+    val currentState by rememberUpdatedState(state)
+    val currentOnTransform by rememberUpdatedState(onTransform)
+    val currentOnTraceX by rememberUpdatedState(onTraceX)
+
     val gestureModifier = if (state.isTraceMode) {
         modifier
-            .pointerInput(state.centerX, state.spanX) {
+            .pointerInput(state.isTraceMode) {
                 detectTapGestures { offset ->
-                    val x = state.centerX + (offset.x / size.width - 0.5) * state.spanX
-                    onTraceX(x)
+                    val s = currentState
+                    val x = s.centerX + (offset.x / size.width - 0.5) * s.spanX
+                    currentOnTraceX(x)
                 }
             }
-            .pointerInput(state.centerX, state.spanX) {
+            .pointerInput(state.isTraceMode) {
                 detectDragGestures { change, _ ->
                     change.consume()
-                    val x = state.centerX + (change.position.x / size.width - 0.5) * state.spanX
-                    onTraceX(x)
+                    val s = currentState
+                    val x = s.centerX + (change.position.x / size.width - 0.5) * s.spanX
+                    currentOnTraceX(x)
                 }
             }
     } else {
-        modifier.pointerInput(state.spanX, state.spanY) {
-            detectTransformGestures { _, pan, zoom, _ ->
-                val dxUnits = -pan.x.toDouble() / size.width * state.spanX
-                val dyUnits = pan.y.toDouble() / size.height * state.spanY
-                if (abs(dxUnits) > 1e-12 || abs(dyUnits) > 1e-12) {
-                    onPan(dxUnits, dyUnits)
-                }
-                if (abs(zoom - 1f) > 0.005f) {
-                    onZoom(1.0 / zoom.toDouble())
-                }
+        modifier.pointerInput(state.isTraceMode) {
+            detectTransformGestures { centroid, pan, zoom, _ ->
+                currentOnTransform(
+                    pan.x,
+                    pan.y,
+                    centroid.x,
+                    centroid.y,
+                    zoom,
+                    size.width,
+                    size.height
+                )
             }
         }
     }

@@ -137,4 +137,36 @@ class MathEngineTest {
         assertClose("212", UnitConverterEngine.convert(BigDecimal("100"), c, f), "1e-20")
         assertClose("-40", UnitConverterEngine.convert(BigDecimal("-40"), f, c), "1e-20")
     }
+
+    @Test
+    fun `graph transform zooms in and out preserving focal centroid`() {
+        val vm = com.example.ui.graph.GraphViewModel()
+        val initial = vm.uiState.value
+        val initSpanX = initial.spanX
+        val initSpanY = initial.spanY
+
+        // Pinch out (zoom = 1.5f) anchored at 75% width, 25% height
+        val w = 1000
+        val h = 1000
+        val cx = 750f
+        val cy = 250f
+        val worldXBefore = initial.centerX + (0.75 - 0.5) * initSpanX
+        val worldYBefore = initial.centerY + (0.5 - 0.25) * initSpanY
+
+        vm.transform(0f, 0f, cx, cy, zoom = 1.5f, widthPx = w, heightPx = h)
+        val zoomedIn = vm.uiState.value
+        assertEquals(initSpanX / 1.5, zoomedIn.spanX, 1e-9)
+        assertEquals(initSpanY / 1.5, zoomedIn.spanY, 1e-9)
+
+        val worldXAfter = zoomedIn.centerX + (0.75 - 0.5) * zoomedIn.spanX
+        val worldYAfter = zoomedIn.centerY + (0.5 - 0.25) * zoomedIn.spanY
+        assertEquals(worldXBefore, worldXAfter, 1e-9)
+        assertEquals(worldYBefore, worldYAfter, 1e-9)
+
+        // Pinch in (zoom = 0.5f) zooms back out
+        vm.transform(0f, 0f, cx, cy, zoom = 0.5f, widthPx = w, heightPx = h)
+        val zoomedOut = vm.uiState.value
+        assertTrue(zoomedOut.spanX > zoomedIn.spanX)
+        assertTrue(zoomedOut.spanY > zoomedIn.spanY)
+    }
 }
